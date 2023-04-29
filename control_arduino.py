@@ -22,6 +22,13 @@ thread = None
 thread_lock = Lock() 
 
 
+config = {
+  'user': '',
+  'password': '',
+  'host': '',
+  'db': '',
+  'raise_on_warnings': True
+}
 
 def save_to_db(data):
     try:
