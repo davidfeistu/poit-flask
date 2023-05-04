@@ -127,6 +127,7 @@
           socket.emit('return_file_data', {value: $('#load-fl').val()});
           return false; });            
       $('#btn-disconnect').click(function(event) {
+          socket.emit('click_event', {value: $('#btn-disconnect').val()}); 
           socket.emit('disconnect_request');
           return false; });
       });
@@ -388,7 +389,7 @@
         <button id="stop-beep" type="submit" value="beepEnd" class="btn btn-danger btn-lg mr-3 animate__animated animate__bounce" style="background-color: #ff5454; border-color: #ff5454;">Parking OFF</button>
         <button id="load-db" type="submit" value="load-db" class="btn btn-primary btn-lg mr-3 animate__animated animate__bounce" style="background-color: #71c100; border-color: #71c100;">Load DB</button>
         <button id="load-fl" type="submit" value="load-fl" class="btn btn-danger btn-lg mr-3 animate__animated animate__bounce" style="background-color: #ff8710; border-color: #ff5454;">Load FL</button>
-        <button id="btn-disconnect" type="submit" class="btn btn-secondary btn-lg animate__animated animate__bounce" style="background-color: #e6e6e6; border-color: #e6e6e6; color: #666;">Disconnect</button>
+        <button id="btn-disconnect" type="submit" value="finalEnd" class="btn btn-secondary btn-lg animate__animated animate__bounce" style="background-color: #e6e6e6; border-color: #e6e6e6; color: #666;">Disconnect</button>
       </div>
     </div>
     

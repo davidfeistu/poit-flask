@@ -1,3 +1,4 @@
+
 import serial.tools.list_ports
 import json
 from threading import Lock
@@ -8,11 +9,6 @@ import re
 import mysql.connector
 
 
-ports = serial.tools.list_ports.comports()
-
-for port, desc, hwid in sorted(ports):
-    print("{}: {} [{}]".format(port, desc, hwid))
-
 
 async_mode = None
 app = Flask(__name__)
@@ -21,12 +17,11 @@ socketio = SocketIO(app, async_mode=async_mode)
 thread = None
 thread_lock = Lock() 
 
-
 config = {
-  'user': '',
-  'password': '',
-  'host': '',
-  'db': '',
+  'user': 'poit',
+  'password': 'poit',
+  'host': '192.168.0.25',
+  'db': 'mysql',
   'raise_on_warnings': True
 }
 
@@ -90,35 +85,34 @@ def read_from_file(filename):
         print(f"Error reading data from {filename}: {e}")
         return None
 
-def background_thread(args):
+def background_thread(args, ms = ''):
     last = ""
     data = ""
     count = 0
-    arduino = serial.Serial('COM11', baudrate=9600, timeout=1)
-    while True:
-        received_message = arduino.readline().decode('utf-8');
-        data_list = []
-        print(received_message)
-        if(received_message):
-            count = count + 1
-            try:
-                data = json.loads(received_message)
-                data_list.append(data)
-                print(data)
-                save_to_db(data)
-                save_to_file(data, "output_data")
-                json_object = read_from_file("output_data")
-                socketio.emit('my_response', {'data': json_object[-1], 'count': count }, namespace='/test')
-            except json.JSONDecodeError:
-                pass
-        if args:
-            action = dict(args).get('btn_value')
-            if(action and action != last):
-                print(args)
-                arduino.write(action.encode())
-                last = action
-        socketio.sleep(1)    
-        #arduino.close()
+    arduino = serial.Serial('/dev/ttyS0', baudrate=115200)
+    if ms != '':
+        if(ms and ms != last):
+            arduino.write(ms.encode())
+            last = ms
+            print('EMIT CALL: ' + ms) 
+    else:    
+        while True:
+            received_message = arduino.readline().decode();
+            data_list = []
+            print(received_message)
+            if(received_message):
+                count = count + 1
+                try:
+                    data = json.loads(received_message)
+                    data_list.append(data)
+                    print(data)
+                    save_to_db(data)
+                    save_to_file(data, "output_data")
+                    json_object = read_from_file("output_data")
+                    socketio.emit('my_response', {'data': json_object[-1], 'count': count }, namespace='/test')
+                except json.JSONDecodeError:
+                    pass   
+        #arduino.close()f
 
 
 @app.route('/')
@@ -150,6 +144,7 @@ def test_connect():
 @socketio.on('click_event', namespace='/test')
 def db_message(message):
     session['btn_value'] = message['value'] 
+    background_thread('', message['value'])
 
 @socketio.on('return_file_data', namespace='/test')
 def db_message(message):
@@ -165,4 +160,4 @@ def test_disconnect():
     print('Client disconnected', request.sid)
 
 if __name__ == '__main__':
-    socketio.run(app, host="0.0.0.0", port=80, debug=True)    
+   socketio.run(app, host="0.0.0.0", port=80, debug=False)    
